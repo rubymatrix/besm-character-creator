@@ -363,36 +363,49 @@ function extractCore(lines: string[], coreAttributes: SheetEntry[]) {
     weaponLevel: 1,
   };
 
-  const coreBuildLine = lines.find((line) => /^##\s+Core Build\s+—\s+\d+\s+CP/i.test(line.trim()));
+  const coreStartIndex = lines.findIndex((line) => /^##\s+Core Build\b/i.test(line.trim()));
+  const coreEndIndex =
+    coreStartIndex >= 0
+      ? lines.findIndex(
+          (line, index) => index > coreStartIndex && /^#\s+Choice\s+\d+:/i.test(line.trim())
+        )
+      : -1;
+
+  const coreLines =
+    coreStartIndex >= 0
+      ? lines.slice(coreStartIndex, coreEndIndex >= 0 ? coreEndIndex : lines.length)
+      : lines;
+
+  const coreBuildLine = coreLines.find((line) => /^##\s+Core Build\s+[—-]\s+\d+\s+CP/i.test(line.trim()));
   if (coreBuildLine) {
     core.coreCp = parseFirstNumber(coreBuildLine);
   }
 
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index].trim();
-    const nextLine = lines[index + 1]?.trim() ?? "";
+  for (let index = 0; index < coreLines.length; index += 1) {
+    const line = coreLines[index].trim();
+    const nextLine = coreLines[index + 1]?.trim() ?? "";
     if (!line.startsWith("|") || !/^\|(?:\s*[-:]+\s*\|)+$/.test(nextLine)) {
       continue;
     }
 
-    const { rows, nextIndex } = parseTableRows(lines, index);
+    const { rows, nextIndex } = parseTableRows(coreLines, index);
     index = nextIndex - 1;
 
     for (const row of rows) {
       const label = (row[0] ?? "").toLowerCase();
-      const value = row[2] ?? row[1] ?? "";
+      const trailingValue = row[row.length - 1] ?? "";
 
-      if (label === "body") core.body = parseFirstNumber(value);
-      if (label === "mind") core.mind = parseFirstNumber(value);
-      if (label === "soul") core.soul = parseFirstNumber(value);
-      if (label === "hp") core.hp = parseFirstNumber(value);
-      if (label === "ep") core.ep = parseFirstNumber(value);
-      if (label === "acv" || label.startsWith("acv ")) core.acv = parseFirstNumber(value);
-      if (label.includes("dcv (melee")) core.dcvMelee = parseFirstNumber(value);
-      if (label.includes("dcv (other")) core.dcvOther = parseFirstNumber(value);
-      if (label.includes("dcv (ranged")) core.dcvRanged = parseFirstNumber(value);
-      if (label === "damage multiplier") core.dm = parseFirstNumber(value) || core.dm;
-      if (label === "ar") core.armor = parseFirstNumber(value);
+      if (label === "body") core.body = parseFirstNumber(row[1] ?? trailingValue);
+      if (label === "mind") core.mind = parseFirstNumber(row[1] ?? trailingValue);
+      if (label === "soul") core.soul = parseFirstNumber(row[1] ?? trailingValue);
+      if (label === "hp") core.hp = parseFirstNumber(trailingValue);
+      if (label === "ep") core.ep = parseFirstNumber(trailingValue);
+      if (label === "acv" || label.startsWith("acv ")) core.acv = parseFirstNumber(trailingValue);
+      if (label.includes("dcv (melee")) core.dcvMelee = parseFirstNumber(trailingValue);
+      if (label.includes("dcv (other")) core.dcvOther = parseFirstNumber(trailingValue);
+      if (label.includes("dcv (ranged")) core.dcvRanged = parseFirstNumber(trailingValue);
+      if (label === "damage multiplier") core.dm = parseFirstNumber(trailingValue) || core.dm;
+      if (label === "ar") core.armor = parseFirstNumber(trailingValue);
     }
   }
 
