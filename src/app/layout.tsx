@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Crimson_Text, Source_Sans_3, Geist } from "next/font/google";
+import { Crimson_Text, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const sourceSans = Source_Sans_3({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 const crimsonText = Crimson_Text({
   variable: "--font-display",
@@ -24,7 +26,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn(crimsonText.variable, "font-sans", geist.variable)}
+      className={`${sourceSans.variable} ${crimsonText.variable} dark`}
       suppressHydrationWarning
     >
       <body>{children}</body>

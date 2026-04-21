@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" role="img" aria-label="Moonlit fantasy valley">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f1831" />
+      <stop offset="45%" stop-color="#17284a" />
+      <stop offset="100%" stop-color="#0a111f" />
+    </linearGradient>
+    <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7e94b7" stop-opacity="0.34" />
+      <stop offset="100%" stop-color="#0d1525" stop-opacity="0" />
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="0" cy="0" r="1" gradientTransform="translate(1480 230) rotate(90) scale(210)">
+      <stop offset="0%" stop-color="#dde8ff" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#dde8ff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#sky)" />
+  <circle cx="1480" cy="230" r="88" fill="#e6efff" />
+  <circle cx="1480" cy="230" r="210" fill="url(#moonGlow)" />
+
+  <g fill="#182843" opacity="0.88">
+    <path d="M0 690 L190 600 L330 650 L480 540 L660 630 L860 555 L1040 640 L1200 575 L1420 640 L1630 555 L1920 650 L1920 1080 L0 1080 Z" />
+    <path d="M0 760 L170 700 L360 760 L570 670 L780 760 L980 700 L1170 760 L1360 700 L1560 770 L1750 690 L1920 760 L1920 1080 L0 1080 Z" />
+  </g>
+
+  <path fill="#101b2f" d="M0 840 L170 780 L360 850 L560 760 L780 850 L980 790 L1200 870 L1440 780 L1670 860 L1920 800 L1920 1080 L0 1080 Z" />
+  <path fill="#0c1425" d="M0 920 L230 860 L420 930 L650 850 L850 930 L1090 860 L1330 940 L1570 860 L1760 930 L1920 890 L1920 1080 L0 1080 Z" />
+
+  <g opacity="0.8" fill="#d7e3ff">
+    <circle cx="130" cy="170" r="1.6" />
+    <circle cx="260" cy="110" r="1.2" />
+    <circle cx="380" cy="190" r="1.4" />
+    <circle cx="610" cy="130" r="1.8" />
+    <circle cx="770" cy="200" r="1.3" />
+    <circle cx="920" cy="160" r="1.6" />
+    <circle cx="1130" cy="120" r="1.4" />
+    <circle cx="1250" cy="190" r="1.5" />
+    <circle cx="1620" cy="140" r="1.4" />
+    <circle cx="1780" cy="210" r="1.2" />
+  </g>
+
+  <rect y="760" width="1920" height="320" fill="url(#fog)" />
+</svg>

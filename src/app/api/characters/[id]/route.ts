@@ -1,0 +1,18 @@
+import { prisma } from "@/lib/prisma";
+
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+
+  const character = await prisma.character.findUnique({
+    where: { id },
+  });
+
+  if (!character) {
+    return Response.json({ error: "Character not found." }, { status: 404 });
+  }
+
+  return Response.json(character);
+}

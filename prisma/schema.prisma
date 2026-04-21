@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum UpgradeStatus {
+  pending
+  accepted
+  declined
+}
+
+model Character {
+  id              String          @id @default(cuid())
+  name            String
+  race            String?
+  gender          Gender
+  archetype       String
+  fightingForm    String?
+  bladeSignature  String?
+  background      String?
+  body            Int
+  mind            Int
+  soul            Int
+  hp              Int
+  ep              Int
+  acv             Int
+  dcvMelee        Int
+  dcvOther        Int
+  dcvRanged       Int
+  dm              Int
+  weaponLevel     Int
+  damagePerHit    Int
+  totalCp         Int
+  extraActions    Int
+  attacksPerRound Int
+  armor           Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  upgrades        UpgradePrompt[]
+}
+
+model UpgradePrompt {
+  id             String        @id @default(cuid())
+  characterId    String
+  title          String
+  description    String
+  options        Json
+  status         UpgradeStatus @default(pending)
+  selectedOption String?
+  createdAt      DateTime      @default(now())
+  resolvedAt     DateTime?
+  character      Character     @relation(fields: [characterId], references: [id], onDelete: Cascade)
+}
