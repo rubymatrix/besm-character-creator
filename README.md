@@ -1,5 +1,41 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Production deployment with PM2
+
+1. Install dependencies and build the app:
+
+```bash
+npm ci
+npm run build
+```
+
+2. Ensure your database is initialized (this project uses Prisma + SQLite by default):
+
+```bash
+npx prisma db push
+```
+
+3. Start with PM2 using the included ecosystem file:
+
+```bash
+npm run pm2:start
+```
+
+4. Save PM2 process list and set startup so it survives reboot:
+
+```bash
+npm run pm2:save
+pm2 startup
+```
+
+Useful PM2 commands:
+
+```bash
+npm run pm2:logs
+npm run pm2:restart
+pm2 status
+```
+
 ## Getting Started
 
 First, run the development server:
