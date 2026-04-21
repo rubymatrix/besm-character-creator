@@ -98,7 +98,7 @@ export function CharacterCreator() {
   }, [activeChoiceGroups, selections]);
 
   const activeArchetype = archetypes.find((entry) => entry.id === selectedArchetypeId);
-  const isBlade = selectedArchetypeId === "blade";
+  const [previewCandidateIndexes, setPreviewCandidateIndexes] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -272,11 +272,17 @@ export function CharacterCreator() {
     brand: Flame,
   };
 
-  const previewImageSrc = isBlade
-    ? gender === "female"
-      ? "/blade_female.png"
-      : "/blade_male.png"
-    : null;
+  const previewImageCandidates = useMemo(
+    () => [
+      `/${selectedArchetypeId}_${gender}.png`,
+      `/${selectedArchetypeId}.png`,
+    ],
+    [gender, selectedArchetypeId]
+  );
+
+  const previewVariantKey = `${selectedArchetypeId}:${gender}`;
+  const previewCandidateIndex = previewCandidateIndexes[previewVariantKey] ?? 0;
+  const previewImageSrc = previewImageCandidates[previewCandidateIndex] ?? null;
 
   const saveCharacter = async () => {
     if (!characterName.trim()) {
@@ -519,11 +525,17 @@ export function CharacterCreator() {
             <div className="relative h-[400px] w-full overflow-hidden rounded-t-xl border-b">
               <Image
                 src={previewImageSrc}
-                alt={`Blade ${gender} preview`}
+                alt={`${activeArchetype?.name ?? "Archetype"} ${gender} preview`}
                 fill
                 sizes="(max-width: 1024px) 100vw, 24rem"
                 className="object-cover object-top"
                 priority
+                onError={() => {
+                  setPreviewCandidateIndexes((current) => ({
+                    ...current,
+                    [previewVariantKey]: (current[previewVariantKey] ?? 0) + 1,
+                  }));
+                }}
               />
             </div>
           ) : null}

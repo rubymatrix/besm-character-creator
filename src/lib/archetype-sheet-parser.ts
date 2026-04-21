@@ -1,7 +1,13 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { cache } from "react";
-import type { SheetEntry } from "@/lib/archetypes";
+import {
+  bladeCoreAttributes,
+  bladeCoreDefects,
+  bladeOptionSheetEntries,
+  getArchetypeConfigById,
+  type SheetEntry,
+} from "@/lib/archetypes";
 
 export type ParsedArchetypeSheet = {
   core: {
@@ -55,6 +61,42 @@ const archetypeToFilename: Record<string, string> = {
   chanter: "Chanter.md",
   brand: "Brand.md",
 };
+
+const fallbackDataByArchetype: Partial<
+  Record<
+    string,
+    {
+      coreAttributes: SheetEntry[];
+      coreDefects: SheetEntry[];
+      optionEntriesByOptionId: Record<string, SheetEntry[]>;
+    }
+  >
+> = {
+  blade: {
+    coreAttributes: bladeCoreAttributes,
+    coreDefects: bladeCoreDefects,
+    optionEntriesByOptionId: bladeOptionSheetEntries,
+  },
+};
+
+function buildFallbackSheet(archetypeId: string): ParsedArchetypeSheet {
+  const config = getArchetypeConfigById(archetypeId);
+  const fallback = fallbackDataByArchetype[archetypeId];
+  const optionEntriesByChoice = Object.fromEntries(
+    config.choiceGroups.flatMap((group) =>
+      group.options.map((option) => [option.name, fallback?.optionEntriesByOptionId[option.id] ?? []])
+    )
+  );
+
+  return {
+    core: config.core,
+    choiceGroups: config.choiceGroups,
+    flavorText: [config.summary],
+    coreAttributes: fallback?.coreAttributes ?? [],
+    coreDefects: fallback?.coreDefects ?? [],
+    optionEntriesByChoice,
+  };
+}
 
 function normalizeCell(value: string): string {
   return value
@@ -460,6 +502,15 @@ function parseArchetypeSheetMarkdown(markdown: string): ParsedArchetypeSheet {
 export const getParsedArchetypeSheet = cache(async (archetypeId: string): Promise<ParsedArchetypeSheet> => {
   const filename = archetypeToFilename[archetypeId] ?? archetypeToFilename.blade;
   const absolutePath = path.resolve(packetDirectory, filename);
-  const markdown = await fs.readFile(absolutePath, "utf8");
-  return parseArchetypeSheetMarkdown(markdown);
+
+  try {
+    const markdown = await fs.readFile(absolutePath, "utf8");
+    return parseArchetypeSheetMarkdown(markdown);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
+      return buildFallbackSheet(archetypeId);
+    }
+
+    throw error;
+  }
 });
