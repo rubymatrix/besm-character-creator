@@ -57,6 +57,26 @@ type CreatorSheetData = {
   optionEntriesByChoice: Record<string, SheetEntry[]>;
 };
 
+const sheetEntryKindOrder: SheetEntry["kind"][] = [
+  "attribute",
+  "feature",
+  "skill",
+  "contact",
+  "enhancement",
+  "limiter",
+  "defect",
+];
+
+const sheetEntryKindLabel: Record<SheetEntry["kind"], string> = {
+  attribute: "Attributes",
+  feature: "Features",
+  skill: "Skills",
+  contact: "Contacts",
+  enhancement: "Enhancements",
+  limiter: "Limiters",
+  defect: "Defects",
+};
+
 function sumBy<T>(items: T[], getter: (item: T) => number | undefined): number {
   return items.reduce((total, item) => total + (getter(item) ?? 0), 0);
 }
@@ -461,58 +481,130 @@ export function CharacterCreator() {
                 <section key={group.id}>
                   <h3 className="font-heading text-lg">{group.label}</h3>
                   <p className="mb-2 text-sm text-muted-foreground">{group.description}</p>
-                  <div className="grid gap-2">
-                    {group.options.map((option) => {
-                      const selected = selections[group.id] === option.id;
-                      const optionEntries = sheetData?.optionEntriesByChoice[option.name] ?? [];
-                      const parsedHighlights = optionEntries.slice(0, 3).map((entry) =>
-                        `${entry.name}${entry.level ? ` L${entry.level}` : ""}`
-                      );
-                      const fallbackOption = option as ChoiceOption;
-                      const keyHighlights = fallbackOption.highlights?.length
-                        ? fallbackOption.highlights
-                        : fallbackOption.notes?.length
-                          ? fallbackOption.notes.slice(0, 3)
-                          : parsedHighlights;
-                      return (
-                        <Button
-                          key={option.id}
-                          type="button"
-                          variant={selected ? "default" : "outline"}
-                          className={cn(
-                            "h-auto items-start justify-start p-3 text-left",
-                            !selected && "bg-card/70"
-                          )}
-                          onClick={() =>
-                            setSelections((current) => ({
-                              ...current,
-                              [group.id]: option.id,
-                            }))
-                          }
-                        >
-                          <div className="w-full space-y-1">
-                            <div className="flex items-center justify-between gap-2">
+                  <div className="grid gap-3 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)]">
+                    <div className="grid gap-2 md:content-start">
+                      {group.options.map((option) => {
+                        const selected = selections[group.id] === option.id;
+
+                        return (
+                          <Button
+                            key={option.id}
+                            type="button"
+                            variant={selected ? "default" : "outline"}
+                            className={cn(
+                              "h-auto items-start justify-start p-3 text-left",
+                              !selected && "bg-card/70"
+                            )}
+                            onClick={() =>
+                              setSelections((current) => ({
+                                ...current,
+                                [group.id]: option.id,
+                              }))
+                            }
+                          >
+                            <div className="flex w-full items-center justify-between gap-2">
                               <span className="font-heading text-base">{option.name}</span>
-                              <Badge variant={selected ? "secondary" : "outline"}>
-                                {option.cp} CP
-                              </Badge>
+                              <Badge variant={selected ? "secondary" : "outline"}>{option.cp} CP</Badge>
                             </div>
-                            <p className="text-xs leading-relaxed opacity-90">{option.summary}</p>
-                            {fallbackOption.weaponNote ? (
-                              <p className="text-xs italic opacity-80">{fallbackOption.weaponNote}</p>
-                            ) : null}
-                            {keyHighlights.length ? (
-                              <div className="pt-1 text-xs opacity-90">
-                                <p className="mb-1 font-medium">Key Effects</p>
-                                {keyHighlights.map((highlight) => (
-                                  <p key={`${option.id}-${highlight}`}>• {highlight}</p>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                        </Button>
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    {(() => {
+                      const selectedOption =
+                        group.options.find((option) => option.id === selections[group.id]) ?? group.options[0];
+
+                      if (!selectedOption) {
+                        return (
+                          <Card className="bg-card/60">
+                            <CardContent className="p-4 text-sm text-muted-foreground">
+                              No option selected.
+                            </CardContent>
+                          </Card>
+                        );
+                      }
+
+                      const selectedOptionEntries = sheetData?.optionEntriesByChoice[selectedOption.name] ?? [];
+                      const groupedSelectedOptionEntries = selectedOptionEntries.reduce<
+                        Record<SheetEntry["kind"], SheetEntry[]>
+                      >(
+                        (accumulator, entry) => {
+                          accumulator[entry.kind].push(entry);
+                          return accumulator;
+                        },
+                        {
+                          attribute: [],
+                          feature: [],
+                          skill: [],
+                          contact: [],
+                          enhancement: [],
+                          limiter: [],
+                          defect: [],
+                        }
                       );
-                    })}
+
+                      const fallbackOption = selectedOption as ChoiceOption;
+
+                      return (
+                        <Card className="bg-card/70">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <CardTitle className="font-heading text-xl">{selectedOption.name}</CardTitle>
+                              <Badge variant="secondary">{selectedOption.cp} CP</Badge>
+                            </div>
+                            <CardDescription className="text-sm leading-relaxed">
+                              {selectedOption.summary}
+                            </CardDescription>
+                            {fallbackOption.weaponNote ? (
+                              <p className="text-xs text-muted-foreground italic">{fallbackOption.weaponNote}</p>
+                            ) : null}
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {selectedOptionEntries.length ? (
+                              sheetEntryKindOrder.map((kind) =>
+                                groupedSelectedOptionEntries[kind].length ? (
+                                  <div key={`${group.id}-${selectedOption.id}-${kind}`}>
+                                    <p className="mb-1 text-xs font-medium text-muted-foreground">
+                                      {sheetEntryKindLabel[kind]}
+                                    </p>
+                                    <div className="space-y-1">
+                                      {groupedSelectedOptionEntries[kind].map((entry) => (
+                                        <p
+                                          key={`${group.id}-${selectedOption.id}-${kind}-${entry.name}-${entry.notes}`}
+                                          className="text-xs leading-relaxed text-muted-foreground"
+                                        >
+                                          • {entry.name}
+                                          {entry.level ? ` L${entry.level}` : ""} ({entry.cp >= 0 ? `+${entry.cp}` : entry.cp} CP): {entry.notes}
+                                        </p>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : null
+                              )
+                            ) : fallbackOption.notes?.length || fallbackOption.highlights?.length ? (
+                              <div>
+                                <p className="mb-1 text-xs font-medium text-muted-foreground">Details</p>
+                                <div className="space-y-1">
+                                  {(fallbackOption.notes ?? fallbackOption.highlights ?? []).map((detail) => (
+                                    <p
+                                      key={`${group.id}-${selectedOption.id}-${detail}`}
+                                      className="text-xs leading-relaxed text-muted-foreground"
+                                    >
+                                      • {detail}
+                                    </p>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">
+                                Detailed packet data for this option is not available yet.
+                              </p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
                   </div>
                 </section>
               ))}
